@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streamer Info Card Overlay - 2 Versi</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --neon-color-1: #a855f7;
+            --neon-color-2: #ec4899;
+            --neon-color-3: #818cf8;
+            --neon-glow: rgba(168, 85, 247, 0.6);
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #0c0517;
+            color: #ffffff;
+            perspective: 1000px;
+        }
+
+        .font-header {
+            font-family: 'Fredoka', cursive;
+        }
+
+        /* ---------------------------------------------
+           RUNNING NEON BORDER ANIMATION (CONIC GRADIENT)
+           --------------------------------------------- */
+        .neon-animated-box {
+            position: relative;
+            overflow: hidden;
+            padding: 2.5px; /* Border thickness */
+        }
+
+        /* Continuous rotating conic gradient for neon trace */
+        .neon-animated-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(
+                transparent, 
+                var(--neon-color-1), 
+                var(--neon-color-2), 
+                var(--neon-color-3), 
+                transparent 40%
+            );
+            animation: rotateNeon 3.5s linear infinite;
+        }
+
+        @keyframes rotateNeon {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Inner container that covers center of conic border */
+        .neon-inner-card {
+            position: relative;
+            background: rgba(22, 9, 38, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 1;
+        }
+
+        /* Glowing outer shadow layer */
+        .neon-glow-shadow {
+            filter: drop-shadow(0 0 15px var(--neon-glow));
+            transition: filter 0.3s ease;
+        }
+
+        .neon-text-glow {
+            text-shadow: 0 0 8px rgba(192, 132, 252, 0.9),
+                         0 0 16px rgba(168, 85, 247, 0.6);
+        }
+
+        /* Floating & Sparkle Animations */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-6px) rotate(4deg); }
+        }
+
+        @keyframes floatReverse {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(6px) rotate(-4deg); }
+        }
+
+        @keyframes sparkleTwinkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.85); }
+            50% { opacity: 1; transform: scale(1.25); }
+        }
+
+        @keyframes moonGlow {
+            0%, 100% { filter: drop-shadow(0 0 4px #c084fc); }
+            50% { filter: drop-shadow(0 0 12px #f472b6); }
+        }
+
+        .animate-float {
+            animation: floatSlow 3.5s ease-in-out infinite;
+        }
+
+        .animate-float-reverse {
+            animation: floatReverse 4s ease-in-out infinite;
+        }
+
+        .animate-sparkle {
+            animation: sparkleTwinkle 2s ease-in-out infinite;
+        }
+
+        .animate-moon {
+            animation: moonGlow 3s ease-in-out infinite;
+        }
+
+        /* 3D Interactive Tilt Transition */
+        .tilt-card {
+            transition: transform 0.15s ease-out;
+            transform-style: preserve-3d;
+        }
+
+        /* Sparkle burst element for click interaction */
+        .click-sparkle {
+            position: absolute;
+            pointer-events: none;
+            animation: burstFade 0.6s ease-out forwards;
+            z-index: 50;
+        }
+
+        @keyframes burstFade {
+            0% { transform: scale(0.3) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1.8) rotate(45deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 selection:bg-purple-500 selection:text-white">
+
+    <!-- OBS MODE TOGGLE & SWITCHER BAR -->
+    <div id="control-bar" class="mb-6 flex flex-wrap items-center justify-center gap-2 bg-purple-950/80 p-2 rounded-2xl border border-purple-500/40 shadow-lg z-30">
+        <button id="btn-v1" onclick="switchVersion(1)" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow">
+            <i class="fa-solid fa-moon text-amber-200 mr-1.5"></i> Versi 1: Compact Standard
+        </button>
+        <button id="btn-v2" onclick="switchVersion(2)" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all text-purple-300 hover:text-white">
+            <i class="fa-solid fa-star text-amber-300 mr-1.5"></i> Versi 2: Mini Ultra-Compact
+        </button>
+        <button id="btn-obs" onclick="toggleOBSMode()" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-400/30">
+            <i class="fa-solid fa-eye-slash mr-1"></i> Hide UI (OBS Mode)
+        </button>
+    </div>
+
+    <!-- MAIN CARD DISPLAY AREA -->
+    <div class="w-full max-w-sm relative flex justify-center items-center">
+
+        <!-- ============================================================== -->
+        <!-- VERSI 1: COMPACT STANDARD WITH MOON & STAR ACCENTS -->
+        <!-- ============================================================== -->
+        <div id="version-1" class="w-full relative">
+            
+            <!-- Moon & Stars Overlay Elements -->
+            <i class="fa-solid fa-moon text-amber-200 text-3xl absolute -top-5 -left-4 animate-float animate-moon z-20" title="Bulan Sabit Neon"></i>
+            <i class="fa-solid fa-star text-amber-300 text-sm absolute -top-6 left-5 animate-sparkle z-20" style="animation-delay: 0.3s;"></i>
+            <i class="fa-solid fa-butterfly text-pink-300 text-2xl absolute -top-5 -right-3 animate-float-reverse z-20"></i>
+            <i class="fa-solid fa-sparkles text-purple-300 text-base absolute -bottom-3 -right-2 animate-sparkle z-20" style="animation-delay: 1.1s;"></i>
+            <i class="fa-solid fa-star text-purple-300 text-xs absolute bottom-1 -left-3 animate-sparkle z-20" style="animation-delay: 0.7s;"></i>
+
+            <!-- 3D TILT TIE CONTAINER -->
+            <div class="tilt-card neon-glow-shadow">
+                
+                <!-- RUNNING NEON BORDER WRAPPER -->
+                <div class="neon-animated-box rounded-3xl cursor-pointer" onclick="createSparkleEffect(event, this)">
+                    
+                    <!-- INNER GLASS CARD -->
+                    <div class="neon-inner-card rounded-[1.4rem] p-4 relative overflow-hidden shadow-2xl">
+                        
+                        <!-- Glow background spots -->
+                        <div class="absolute -top-10 -right-10 w-28 h-28 bg-purple-600/30 rounded-full blur-2xl pointer-events-none"></div>
+                        <div class="absolute -bottom-10 -left-10 w-28 h-28 bg-pink-600/25 rounded-full blur-2xl pointer-events-none"></div>
+
+                        <!-- Header -->
+                        <div class="flex items-center justify-between border-b border-purple-400/30 pb-2.5 mb-3">
+                            <div class="flex items-center space-x-2 pl-3">
+                                <h2 class="font-header text-base font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-100 via-pink-200 to-white neon-text-glow tracking-wide">
+                                    Streamer Info
+                                </h2>
+                            </div>
+                            <span class="text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-purple-900/60 border border-purple-400/40 text-purple-200 uppercase flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live
+                            </span>
+                        </div>
+
+                        <!-- Info Item Rows -->
+                        <div class="space-y-2">
+                            
+                            <!-- USERNAME -->
+                            <div class="group bg-purple-950/40 hover:bg-purple-900/60 p-2 rounded-xl border border-purple-400/30 transition-all flex items-center gap-2.5 hover:translate-x-1">
+                                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-md text-xs shrink-0">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[8px] uppercase font-bold text-purple-300 tracking-wider">Username</p>
+                                    <p class="val-username text-xs font-bold text-white truncate neon-text-glow">Aerish</p>
+                                </div>
+                                <i class="fa-solid fa-star text-[10px] text-amber-300/60 group-hover:text-amber-300"></i>
+                            </div>
+
+                            <!-- USER ID (Interactive Copy Click) -->
+                            <div onclick="copyUserId(event)" class="group bg-purple-950/40 hover:bg-purple-900/60 p-2 rounded-xl border border-purple-400/30 transition-all flex items-center gap-2.5 hover:translate-x-1 cursor-pointer relative" title="Klik untuk menyalin ID">
+                                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white shadow-md text-xs shrink-0">
+                                    <i class="fa-solid fa-id-card"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[8px] uppercase font-bold text-purple-300 tracking-wider">User ID</p>
+                                    <p class="val-userid text-xs font-bold text-pink-200 font-mono truncate">#8849-2041</p>
+                                </div>
+                                <i class="fa-solid fa-copy text-[10px] text-purple-400/40 group-hover:text-pink-300"></i>
+                                <span class="copy-toast absolute -top-6 right-2 bg-pink-500 text-white text-[9px] px-2 py-0.5 rounded shadow opacity-0 transition-opacity pointer-events-none">Disalin!</span>
+                            </div>
+
+                            <!-- SERVER -->
+                            <div class="group bg-purple-950/40 hover:bg-purple-900/60 p-2 rounded-xl border border-purple-400/30 transition-all flex items-center gap-2.5 hover:translate-x-1">
+                                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-fuchsia-600 flex items-center justify-center text-white shadow-md text-xs shrink-0">
+                                    <i class="fa-solid fa-globe"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[8px] uppercase font-bold text-purple-300 tracking-wider">Server</p>
+                                    <p class="val-server text-xs font-bold text-purple-100 truncate">Asia (SEA)</p>
+                                </div>
+                                <i class="fa-solid fa-moon text-[10px] text-purple-300/40 group-hover:text-purple-300"></i>
+                            </div>
+
+                            <!-- GAMES -->
+                            <div class="group bg-purple-950/40 hover:bg-purple-900/60 p-2 rounded-xl border border-purple-400/30 transition-all flex items-center gap-2.5 hover:translate-x-1">
+                                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-fuchsia-500 to-purple-600 flex items-center justify-center text-white shadow-md text-xs shrink-0">
+                                    <i class="fa-solid fa-gamepad"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[8px] uppercase font-bold text-purple-300 tracking-wider">Games</p>
+                                    <p class="val-games text-xs font-bold text-fuchsia-200 truncate">Genshin Impact</p>
+                                </div>
+                                <i class="fa-solid fa-sparkles text-[10px] text-fuchsia-300/40 group-hover:text-fuchsia-300"></i>
+                            </div>
+
+                        </div>
+
+                        <!-- Footer Tagline -->
+                        <div class="mt-2.5 pt-1.5 text-center border-t border-purple-500/20">
+                            <span class="text-[9px] text-purple-300/80 tracking-wide flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-moon text-amber-200 text-[8px]"></i> Chill & Good Vibes <i class="fa-solid fa-star text-amber-300 text-[8px]"></i>
+                            </span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- VERSI 2: MINI ULTRA-COMPACT (RINGKAS & HEMAT RUANG) -->
+        <!-- ============================================================== -->
+        <div id="version-2" class="w-64 relative hidden">
+            
+            <!-- Floating Mini Moon & Stars -->
+            <i class="fa-solid fa-moon text-amber-200 text-2xl absolute -top-4 -left-3 animate-float animate-moon z-20"></i>
+            <i class="fa-solid fa-star text-amber-300 text-xs absolute -top-4 right-2 animate-sparkle z-20"></i>
+            <i class="fa-solid fa-sparkles text-pink-300 text-xs absolute -bottom-2 -left-2 animate-sparkle z-20"></i>
+
+            <div class="tilt-card neon-glow-shadow">
+                <div class="neon-animated-box rounded-2xl cursor-pointer" onclick="createSparkleEffect(event, this)">
+                    <div class="neon-inner-card rounded-[0.9rem] p-3 relative overflow-hidden shadow-xl">
+                        
+                        <!-- Header Ringkas -->
+                        <div class="flex items-center justify-between border-b border-purple-400/30 pb-1.5 mb-2 pl-3">
+                            <span class="font-header text-xs font-bold text-purple-200 neon-text-glow">INFO</span>
+                            <span class="text-[8px] px-1.5 py-0.2 rounded-full bg-purple-900/80 border border-purple-400/30 text-emerald-300 flex items-center gap-1">
+                                <span class="w-1 h-1 rounded-full bg-emerald-400 animate-ping"></span> LIVE
+                            </span>
+                        </div>
+
+                        <!-- Info Grid 2 Kolom Ringkas -->
+                        <div class="space-y-1.5 text-[11px]">
+                            
+                            <!-- Username -->
+                            <div class="bg-purple-950/50 p-1.5 rounded-lg border border-purple-400/30 flex items-center justify-between">
+                                <span class="text-[9px] text-purple-300 flex items-center gap-1"><i class="fa-solid fa-user text-[10px] text-purple-400"></i> ID:</span>
+                                <span class="val-username font-bold text-white text-right truncate max-w-[110px]">Aerish</span>
+                            </div>
+
+                            <!-- User ID -->
+                            <div onclick="copyUserId(event)" class="bg-purple-950/50 hover:bg-purple-900/70 p-1.5 rounded-lg border border-purple-400/30 flex items-center justify-between cursor-pointer relative" title="Klik untuk menyalin">
+                                <span class="text-[9px] text-purple-300 flex items-center gap-1"><i class="fa-solid fa-hashtag text-[10px] text-pink-400"></i> No:</span>
+                                <span class="val-userid font-mono font-bold text-pink-200 text-right truncate max-w-[110px]">#8849-2041</span>
+                                <span class="copy-toast absolute -top-5 right-1 bg-pink-500 text-white text-[8px] px-1.5 py-0.2 rounded opacity-0 transition-opacity">Disalin!</span>
+                            </div>
+
+                            <!-- Server -->
+                            <div class="bg-purple-950/50 p-1.5 rounded-lg border border-purple-400/30 flex items-center justify-between">
+                                <span class="text-[9px] text-purple-300 flex items-center gap-1"><i class="fa-solid fa-globe text-[10px] text-indigo-400"></i> Srv:</span>
+                                <span class="val-server font-bold text-purple-100 text-right truncate max-w-[110px]">Asia (SEA)</span>
+                            </div>
+
+                            <!-- Game -->
+                            <div class="bg-purple-950/50 p-1.5 rounded-lg border border-purple-400/30 flex items-center justify-between">
+                                <span class="text-[9px] text-purple-300 flex items-center gap-1"><i class="fa-solid fa-gamepad text-[10px] text-fuchsia-400"></i> Game:</span>
+                                <span class="val-games font-bold text-fuchsia-200 text-right truncate max-w-[110px]">Genshin</span>
+                            </div>
+
+                        </div>
+
+                        <!-- Footer Mini -->
+                        <div class="mt-1.5 pt-1 text-center border-t border-purple-500/20 text-[8px] text-purple-300/70">
+                            <i class="fa-solid fa-star text-amber-300 text-[7px]"></i> streamer overlay
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- CONTROL PANEL & THEMING -->
+    <div id="control-panel" class="w-full max-w-sm mt-5 bg-purple-950/90 border border-purple-500/40 rounded-2xl p-3 text-xs space-y-3 z-30 transition-all">
+        <!-- Theme Colors Switcher -->
+        <div class="flex items-center justify-between border-b border-purple-500/20 pb-2">
+            <span class="text-purple-300 text-[11px] font-bold"><i class="fa-solid fa-palette mr-1 text-purple-400"></i> Warna Neon:</span>
+            <div class="flex gap-1.5">
+                <button onclick="setNeonTheme('purple')" class="w-5 h-5 rounded-full bg-purple-500 border border-white/40 hover:scale-110 transition-transform" title="Purple Theme"></button>
+                <button onclick="setNeonTheme('pink')" class="w-5 h-5 rounded-full bg-pink-500 border border-white/40 hover:scale-110 transition-transform" title="Pink Theme"></button>
+                <button onclick="setNeonTheme('cyan')" class="w-5 h-5 rounded-full bg-cyan-400 border border-white/40 hover:scale-110 transition-transform" title="Cyan Theme"></button>
+                <button onclick="setNeonTheme('gold')" class="w-5 h-5 rounded-full bg-amber-400 border border-white/40 hover:scale-110 transition-transform" title="Gold Theme"></button>
+            </div>
+        </div>
+
+        <!-- Inputs -->
+        <div class="grid grid-cols-2 gap-2">
+            <div>
+                <label class="text-[10px] text-purple-300 font-semibold">Username</label>
+                <input type="text" id="in-username" value="Aerish" oninput="updateCards()" class="w-full bg-purple-900/60 border border-purple-400/40 rounded-lg px-2 py-1 text-white focus:outline-none focus:border-purple-300">
+            </div>
+            <div>
+                <label class="text-[10px] text-purple-300 font-semibold">User ID</label>
+                <input type="text" id="in-userid" value="#8849-2041" oninput="updateCards()" class="w-full bg-purple-900/60 border border-purple-400/40 rounded-lg px-2 py-1 text-white focus:outline-none focus:border-purple-300">
+            </div>
+            <div>
+                <label class="text-[10px] text-purple-300 font-semibold">Server</label>
+                <input type="text" id="in-server" value="Asia (SEA)" oninput="updateCards()" class="w-full bg-purple-900/60 border border-purple-400/40 rounded-lg px-2 py-1 text-white focus:outline-none focus:border-purple-300">
+            </div>
+            <div>
+                <label class="text-[10px] text-purple-300 font-semibold">Games</label>
+                <input type="text" id="in-games" value="Genshin Impact" oninput="updateCards()" class="w-full bg-purple-900/60 border border-purple-400/40 rounded-lg px-2 py-1 text-white focus:outline-none focus:border-purple-300">
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Show Controls Button for OBS Overlay mode toggle -->
+    <button id="btn-show-controls" onclick="toggleOBSMode()" class="hidden fixed bottom-4 right-4 bg-purple-900/80 hover:bg-purple-800 text-purple-200 border border-purple-400/40 px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg z-50">
+        <i class="fa-solid fa-eye mr-1"></i> Show Controls
+    </button>
+
+    <script>
+        // Switch between Version 1 and Version 2
+        function switchVersion(ver) {
+            const v1 = document.getElementById('version-1');
+            const v2 = document.getElementById('version-2');
+            const btn1 = document.getElementById('btn-v1');
+            const btn2 = document.getElementById('btn-v2');
+
+            if (ver === 1) {
+                v1.classList.remove('hidden');
+                v2.classList.add('hidden');
+                btn1.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow";
+                btn2.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all text-purple-300 hover:text-white";
+            } else {
+                v1.classList.add('hidden');
+                v2.classList.remove('hidden');
+                btn2.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow";
+                btn1.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all text-purple-300 hover:text-white";
+            }
+        }
+
+        // Toggle OBS Display Overlay Mode (hides controls)
+        let isOBSMode = false;
+        function toggleOBSMode() {
+            const controlBar = document.getElementById('control-bar');
+            const controlPanel = document.getElementById('control-panel');
+            const showBtn = document.getElementById('btn-show-controls');
+
+            isOBSMode = !isOBSMode;
+
+            if (isOBSMode) {
+                controlBar.classList.add('hidden');
+                controlPanel.classList.add('hidden');
+                showBtn.classList.remove('hidden');
+                document.body.style.backgroundColor = 'transparent';
+            } else {
+                controlBar.classList.remove('hidden');
+                controlPanel.classList.remove('hidden');
+                showBtn.classList.add('hidden');
+                document.body.style.backgroundColor = '#0c0517';
+            }
+        }
+
+        // Live update input values across both card versions
+        function updateCards() {
+            const username = document.getElementById('in-username').value || 'User';
+            const userid = document.getElementById('in-userid').value || '#0000';
+            const server = document.getElementById('in-server').value || 'Asia';
+            const games = document.getElementById('in-games').value || 'Game';
+
+            document.querySelectorAll('.val-username').forEach(el => el.innerText = username);
+            document.querySelectorAll('.val-userid').forEach(el => el.innerText = userid);
+            document.querySelectorAll('.val-server').forEach(el => el.innerText = server);
+            document.querySelectorAll('.val-games').forEach(el => el.innerText = games);
+        }
+
+        // Copy User ID feature using document.execCommand fallback
+        function copyUserId(e) {
+            e.stopPropagation();
+            const userId = e.currentTarget.querySelector('.val-userid').innerText;
+            
+            const el = document.createElement('textarea');
+            el.value = userId;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+
+            const toast = e.currentTarget.querySelector('.copy-toast');
+            if(toast) {
+                toast.style.opacity = '1';
+                setTimeout(() => { toast.style.opacity = '0'; }, 1500);
+            }
+        }
+
+        // 3D Interactive Tilt Effect on Mousemove
+        document.addEventListener('mousemove', (e) => {
+            const tiltCards = document.querySelectorAll('.tilt-card');
+            const { innerWidth, innerHeight } = window;
+            const mouseX = (e.clientX - innerWidth / 2) / (innerWidth / 2);
+            const mouseY = (e.clientY - innerHeight / 2) / (innerHeight / 2);
+            
+            const tiltX = mouseY * -12;
+            const tiltY = mouseX * 12;
+
+            tiltCards.forEach(card => {
+                card.style.transform = `rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+            });
+        });
+
+        // Click Sparkle Particle Effect
+        function createSparkleEffect(e, card) {
+            const rect = card.getBoundingClientRect();
+            
+            const sparkle = document.createElement('i');
+            sparkle.className = 'fa-solid fa-sparkles click-sparkle text-amber-300 text-base';
+            sparkle.style.left = `${e.clientX - rect.left - 8}px`;
+            sparkle.style.top = `${e.clientY - rect.top - 8}px`;
+
+            card.appendChild(sparkle);
+
+            setTimeout(() => {
+                sparkle.remove();
+            }, 600);
+        }
+
+        // Neon Theme Colors Switcher
+        function setNeonTheme(theme) {
+            const root = document.documentElement;
+            if (theme === 'purple') {
+                root.style.setProperty('--neon-color-1', '#a855f7');
+                root.style.setProperty('--neon-color-2', '#ec4899');
+                root.style.setProperty('--neon-color-3', '#818cf8');
+                root.style.setProperty('--neon-glow', 'rgba(168, 85, 247, 0.6)');
+            } else if (theme === 'pink') {
+                root.style.setProperty('--neon-color-1', '#f43f5e');
+                root.style.setProperty('--neon-color-2', '#f472b6');
+                root.style.setProperty('--neon-color-3', '#fb7185');
+                root.style.setProperty('--neon-glow', 'rgba(244, 63, 94, 0.6)');
+            } else if (theme === 'cyan') {
+                root.style.setProperty('--neon-color-1', '#06b6d4');
+                root.style.setProperty('--neon-color-2', '#a855f7');
+                root.style.setProperty('--neon-color-3', '#3b82f6');
+                root.style.setProperty('--neon-glow', 'rgba(6, 182, 212, 0.6)');
+            } else if (theme === 'gold') {
+                root.style.setProperty('--neon-color-1', '#f59e0b');
+                root.style.setProperty('--neon-color-2', '#fbbf24');
+                root.style.setProperty('--neon-color-3', '#f43f5e');
+                root.style.setProperty('--neon-glow', 'rgba(245, 158, 11, 0.6)');
+            }
+        }
+    </script>
+</body>
+</html>
