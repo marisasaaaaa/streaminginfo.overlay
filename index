@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streamer Info Card Overlay</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: transparent; /* Transparan agar cocok untuk OBS/TikTok Studio */
+            color: #ffffff;
+            perspective: 1000px;
+        }
+
+        .font-header {
+            font-family: 'Fredoka', cursive;
+        }
+
+        /* RUNNING NEON BORDER ANIMATION */
+        .neon-animated-box {
+            position: relative;
+            overflow: hidden;
+            padding: 2.5px;
+        }
+
+        .neon-animated-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(
+                transparent, 
+                var(--neon-color-1, #a855f7), 
+                var(--neon-color-2, #ec4899), 
+                var(--neon-color-3, #818cf8), 
+                transparent 40%
+            );
+            animation: rotateNeon 3.5s linear infinite;
+        }
+
+        @keyframes rotateNeon {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .neon-inner-card {
+            position: relative;
+            background: rgba(22, 9, 38, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 1;
+        }
+
+        .neon-glow-shadow {
+            filter: drop-shadow(0 0 15px var(--neon-glow, rgba(168, 85, 247, 0.6)));
+        }
+
+        .neon-text-glow {
+            text-shadow: 0 0 8px rgba(192, 132, 252, 0.9),
+                         0 0 16px rgba(168, 85, 247, 0.6);
+        }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-6px) rotate(4deg); }
+        }
+
+        @keyframes floatReverse {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(6px) rotate(-4deg); }
+        }
+
+        @keyframes sparkleTwinkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.85); }
+            50% { opacity: 1; transform: scale(1.25); }
+        }
+
+        @keyframes moonGlow {
+            0%, 100% { filter: drop-shadow(0 0 4px #c084fc); }
+            50% { filter: drop-shadow(0 0 12px #f472b6); }
+        }
+
+        .animate-float {
+            animation: floatSlow 3.5s ease-in-out infinite;
+        }
+
+        .animate-float-reverse {
+            animation: floatReverse 4s ease-in-out infinite;
+        }
+
+        .animate-sparkle {
+            animation: sparkleTwinkle 2s ease-in-out infinite;
+        }
+
+        .animate-moon {
+            animation: moonGlow 3s ease-in-out infinite;
+        }
+
+        .tilt-card {
+            transition: transform 0.15s ease-out;
+            transform-style: preserve-3d;
+        }
+
+        .click-sparkle {
+            position: absolute;
+            pointer-events: none;
+            animation: burstFade 0.6s ease-out forwards;
+            z-index: 50;
+        }
+
+        @keyframes burstFade {
+            0% { transform: scale(0.3) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1.8) rotate(45deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- MAIN CARD DISPLAY AREA -->
+    <div class="w-full max-w-sm relative flex justify-center">
+        <div id="version-1" class="w-full relative">
+            
+            <!-- Moon & Stars Overlay Elements -->
+            <i class="fa-solid fa-moon text-amber-200 text-3xl absolute -top-5 -left-4 animate-float animate-moon z-20"></i>
+            <i class="fa-solid fa-star text-amber-300 text-sm absolute -top-6 left-5 animate-sparkle z-20" style="animation-delay
